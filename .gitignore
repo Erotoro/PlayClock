@@ -2,13 +2,14 @@
 build/
 run/
 out/
+bin/
 *.class
 *.log
 *.lck
 /.idea/
 /.vscode/
-/.settings/
-/.classpath
-/.project
+.settings/
+.classpath
+.project
 /gradle-home/
 /jdks/
