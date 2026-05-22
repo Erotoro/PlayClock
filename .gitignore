@@ -1,0 +1,14 @@
+.gradle/
+build/
+run/
+out/
+*.class
+*.log
+*.lck
+/.idea/
+/.vscode/
+/.settings/
+/.classpath
+/.project
+/gradle-home/
+/jdks/

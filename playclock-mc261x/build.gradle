@@ -1,0 +1,36 @@
+plugins {
+    id "net.fabricmc.fabric-loom" version "${fabric_loom_version}"
+}
+
+base {
+    archivesName = "${mod_id}-mc261x"
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_261x}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_261x}"
+    compileOnly "com.terraformersmc:modmenu:18.0.0-alpha.8"
+
+    implementation project(":playclock-core")
+}
+
+jar {
+    from(project(":playclock-core").sourceSets.main.output)
+}
+
+sourcesJar {
+    from(project(":playclock-core").sourceSets.main.allSource)
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "minecraftVersion", minecraft_261x
+
+    filesMatching("fabric.mod.json") {
+        expand(
+            version: project.version,
+            minecraftVersion: minecraft_261x
+        )
+    }
+}

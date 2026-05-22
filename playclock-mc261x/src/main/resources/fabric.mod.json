@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "playclock",
+  "version": "${version}",
+  "name": "PlayClock",
+  "description": "Client-side Fabric mod that tracks playtime for servers and worlds with clean list badges, hover tooltips, and an in-game HUD.",
+  "authors": [
+    "Erotoro"
+  ],
+  "icon": "assets/playclock/icon.png",
+  "contact": {
+    "homepage": "https://github.com/maksg/PlayClock",
+    "sources": "https://github.com/maksg/PlayClock",
+    "issues": "https://github.com/maksg/PlayClock/issues"
+  },
+  "license": "GPL-3.0-or-later",
+  "environment": "client",
+  "entrypoints": {
+    "main": [
+      "dev.maksg.playclock.mc261x.PlayClock261x"
+    ],
+    "client": [
+      "dev.maksg.playclock.mc261x.client.PlayClock261xClient"
+    ],
+    "modmenu": [
+      "dev.maksg.playclock.mc261x.client.config.PlayClock261xModMenuApi"
+    ]
+  },
+  "mixins": [
+    "playclock261x.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.2",
+    "minecraft": "${minecraftVersion}",
+    "java": ">=25",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}
