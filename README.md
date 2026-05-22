@@ -2,7 +2,7 @@
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-DBD0B4?style=flat-square)](https://fabricmc.net/)
 [![Java](https://img.shields.io/badge/Java-21%2B%20%2F%2025%2B-orange?style=flat-square)](https://adoptium.net/)
 [![Tests](https://img.shields.io/badge/tests-passing-success?style=flat-square)](#download)
-[![Release](https://img.shields.io/badge/Download-Releases-blue?style=flat-square)](https://github.com/maksg/PlayClock/releases)
+[![Release](https://img.shields.io/badge/Download-Releases-blue?style=flat-square)](https://github.com/erotoro/PlayClock/releases)
 
 # PlayClock
 
