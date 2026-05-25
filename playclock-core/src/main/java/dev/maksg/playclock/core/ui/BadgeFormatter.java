@@ -2,6 +2,7 @@ package dev.maksg.playclock.core.ui;
 
 import dev.maksg.playclock.core.config.PlayClockConfig;
 import dev.maksg.playclock.core.stats.PlaytimeStats;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
@@ -16,14 +17,20 @@ public final class BadgeFormatter {
             ZoneId zoneId,
             PlayClockConfig config,
             String minecraftLanguage) {
+        long effectiveTodaySeconds = effectiveTodaySeconds(stats, zoneId);
         String lastPlayed = stats.lastPlayedAt() == null
                 ? "-"
                 : LAST_PLAYED_FORMATTER.format(stats.lastPlayedAt().atZone(zoneId));
 
         return new BadgeSnapshot(
                 TimeFormatters.formatDuration(stats.totalPlaytimeSeconds(), config, minecraftLanguage),
-                TimeFormatters.formatDuration(stats.todayPlaytimeSeconds(), config, minecraftLanguage),
+                TimeFormatters.formatDuration(effectiveTodaySeconds, config, minecraftLanguage),
                 TimeFormatters.formatClockDuration(stats.currentSessionSeconds()),
                 lastPlayed);
+    }
+
+    private static long effectiveTodaySeconds(PlaytimeStats stats, ZoneId zoneId) {
+        LocalDate today = LocalDate.now(zoneId);
+        return today.equals(stats.todayDate()) ? stats.todayPlaytimeSeconds() : 0;
     }
 }

@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.maksg.playclock.core.config.PlayClockConfig;
 import dev.maksg.playclock.core.model.SourceType;
 import dev.maksg.playclock.core.model.TrackedTarget;
+import dev.maksg.playclock.core.stats.PlaytimeStats;
 import dev.maksg.playclock.core.storage.PlayClockStore;
 import dev.maksg.playclock.core.time.Clock;
 import java.time.Instant;
@@ -45,6 +46,7 @@ class PlayClockRuntimeServiceTest {
         assertEquals(75, snapshot.stats().get(target.key()).todayPlaytimeSeconds());
         assertNotNull(store.lastSavedState);
         assertEquals(75, store.lastSavedState.stats().get(target.key()).totalPlaytimeSeconds());
+        assertTrue(store.durableSaveCount > 0);
         assertNull(service.activeTarget());
     }
 
@@ -70,6 +72,123 @@ class PlayClockRuntimeServiceTest {
 
         assertEquals(initialState.config(), service.snapshot().config());
         assertSame(target, service.snapshot().targets().get(target.key()));
+    }
+
+    @Test
+    void resetsStoredCurrentSessionWhenLoadingState() throws Exception {
+        TrackedTarget target = new TrackedTarget(
+                "singleplayer:my-world",
+                "My World",
+                "my-world",
+                null,
+                false,
+                false);
+
+        PlaytimeStats storedStats = new PlaytimeStats(
+                3600,
+                0,
+                java.time.LocalDate.of(2026, 5, 19),
+                3600,
+                777,
+                Instant.parse("2026-05-19T09:00:00Z"));
+
+        PlayClockState initialState = new PlayClockState(
+                1,
+                PlayClockConfig.defaults(),
+                Map.of(target.key(), target),
+                Map.of(target.key(), storedStats));
+
+        PlayClockRuntimeService service = new PlayClockRuntimeService(
+                new InMemoryStore(initialState),
+                new MutableClock(Instant.parse("2026-05-19T10:00:00Z"), ZoneId.of("UTC")));
+
+        assertEquals(3600, service.snapshot().stats().get(target.key()).totalPlaytimeSeconds());
+        assertEquals(0, service.snapshot().stats().get(target.key()).currentSessionSeconds());
+    }
+
+    @Test
+    void preservesStoredTotalAcrossRestartAndStartsNewSessionFromZero() throws Exception {
+        TrackedTarget target = new TrackedTarget(
+                "multiplayer:mc.example.com",
+                "mc.example.com",
+                "mc.example.com",
+                SourceType.SAVED,
+                true,
+                false);
+
+        PlaytimeStats storedStats = new PlaytimeStats(
+                6 * 60 * 60,
+                0,
+                java.time.LocalDate.of(2026, 5, 19),
+                6 * 60 * 60,
+                999,
+                Instant.parse("2026-05-19T12:00:00Z"));
+
+        PlayClockState initialState = new PlayClockState(
+                1,
+                PlayClockConfig.defaults(),
+                Map.of(target.key(), target),
+                Map.of(target.key(), storedStats));
+
+        InMemoryStore store = new InMemoryStore(initialState);
+        MutableClock clock = new MutableClock(Instant.parse("2026-05-19T13:00:00Z"), ZoneId.of("UTC"));
+        PlayClockRuntimeService service = new PlayClockRuntimeService(store, clock);
+
+        service.startSession(target);
+        clock.advanceSeconds(75);
+        service.flush();
+
+        PlaytimeStats stats = service.snapshot().stats().get(target.key());
+        assertEquals((6 * 60 * 60) + 75, stats.totalPlaytimeSeconds());
+        assertEquals((6 * 60 * 60) + 75, stats.todayPlaytimeSeconds());
+        assertEquals(75, stats.currentSessionSeconds());
+    }
+
+    @Test
+    void performsPeriodicDurableSaveForActiveSession() throws Exception {
+        InMemoryStore store = new InMemoryStore(new PlayClockState(1, PlayClockConfig.defaults(), Map.of(), Map.of()));
+        MutableClock clock = new MutableClock(Instant.parse("2026-05-19T12:00:00Z"), ZoneId.of("UTC"));
+        PlayClockRuntimeService service = new PlayClockRuntimeService(store, clock);
+
+        TrackedTarget target = new TrackedTarget(
+                "multiplayer:mc.example.com",
+                "mc.example.com",
+                "mc.example.com",
+                SourceType.SAVED,
+                true,
+                false);
+
+        service.startSession(target);
+        clock.advanceSeconds(5);
+        service.flush();
+        assertEquals(0, store.durableSaveCount);
+
+        clock.advanceSeconds(5);
+        service.flush();
+        assertEquals(1, store.durableSaveCount);
+    }
+
+    @Test
+    void shutdownDurablyPersistsLatestActiveSessionState() throws Exception {
+        InMemoryStore store = new InMemoryStore(new PlayClockState(1, PlayClockConfig.defaults(), Map.of(), Map.of()));
+        MutableClock clock = new MutableClock(Instant.parse("2026-05-19T12:00:00Z"), ZoneId.of("UTC"));
+        PlayClockRuntimeService service = new PlayClockRuntimeService(store, clock);
+
+        TrackedTarget target = new TrackedTarget(
+                "multiplayer:mc.example.com",
+                "mc.example.com",
+                "mc.example.com",
+                SourceType.SAVED,
+                true,
+                false);
+
+        service.startSession(target);
+        clock.advanceSeconds(42);
+        service.shutdown();
+
+        assertEquals(1, store.durableSaveCount);
+        assertNotNull(store.lastDurablySavedState);
+        assertEquals(42, store.lastDurablySavedState.stats().get(target.key()).totalPlaytimeSeconds());
     }
 
     @Test
@@ -119,7 +238,9 @@ class PlayClockRuntimeServiceTest {
     private static final class InMemoryStore implements PlayClockStore {
         private final PlayClockState loadedState;
         private PlayClockState lastSavedState;
+        private PlayClockState lastDurablySavedState;
         private int saveCount;
+        private int durableSaveCount;
 
         private InMemoryStore(PlayClockState loadedState) {
             this.loadedState = loadedState;
@@ -134,6 +255,12 @@ class PlayClockRuntimeServiceTest {
         public void save(PlayClockState state) {
             this.lastSavedState = state;
             this.saveCount++;
+        }
+
+        @Override
+        public void saveDurably(PlayClockState state) {
+            this.lastDurablySavedState = state;
+            this.durableSaveCount++;
         }
     }
 

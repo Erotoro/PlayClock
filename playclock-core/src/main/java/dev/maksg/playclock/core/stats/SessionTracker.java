@@ -20,6 +20,19 @@ public final class SessionTracker {
         this.clock = clock;
     }
 
+    public void restoreStats(Map<String, PlaytimeStats> storedStats) {
+        statsByTarget.clear();
+        LocalDate today = LocalDate.now(clock.zoneId());
+
+        storedStats.forEach((targetKey, stats) -> statsByTarget.put(targetKey, new PlaytimeStats(
+                stats.totalPlaytimeSeconds(),
+                stats.previousDayPlaytimeSeconds(),
+                stats.todayDate() == null ? today : stats.todayDate(),
+                stats.todayPlaytimeSeconds(),
+                0,
+                stats.lastPlayedAt())));
+    }
+
     public void start(TrackedTarget target) {
         activeTarget = target;
         sessionStartedAt = clock.now();

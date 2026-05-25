@@ -2,7 +2,7 @@
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-DBD0B4?style=flat-square)](https://fabricmc.net/)
 [![Java](https://img.shields.io/badge/Java-21%2B%20%2F%2025%2B-orange?style=flat-square)](https://adoptium.net/)
 [![Tests](https://img.shields.io/badge/tests-passing-success?style=flat-square)](#download)
-[![Release](https://img.shields.io/badge/Download-Releases-blue?style=flat-square)](https://github.com/erotoro/PlayClock/releases)
+[![Release](https://img.shields.io/badge/Download-Releases-blue?style=flat-square)](https://github.com/Erotoro/PlayClock/releases)
 
 # PlayClock
 
@@ -67,12 +67,12 @@ There are separate release files for each Minecraft branch.
 
 Download the latest release here:
 
-**[GitHub Releases](https://github.com/maksg/PlayClock/releases)**
+**[GitHub Releases](https://github.com/Erotoro/PlayClock/releases)**
 
 Recommended files:
 
-- `PlayClock-1.0-1.21.11.jar`
-- `PlayClock-1.0-26.1+.jar`
+- `PlayClock-1.1.0-1.21.11.jar`
+- `PlayClock-1.1.0-26.1+.jar`
 
 You should also have:
 
@@ -152,12 +152,12 @@ PlayClock stores its data in:
 
 Check the releases page:
 
-**[Download PlayClock Releases](https://github.com/maksg/PlayClock/releases)**
+**[Download PlayClock Releases](https://github.com/Erotoro/PlayClock/releases)**
 
 If you want the correct file quickly:
 
-- use `PlayClock-1.0-1.21.11.jar` for **Minecraft 1.21.11**
-- use `PlayClock-1.0-26.1+.jar` for **Minecraft 26.1+**
+- use `PlayClock-1.1.0-1.21.11.jar` for **Minecraft 1.21.11**
+- use `PlayClock-1.1.0-26.1+.jar` for **Minecraft 26.1+**
 
 ## License
 

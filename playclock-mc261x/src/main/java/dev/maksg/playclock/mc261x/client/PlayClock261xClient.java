@@ -20,6 +20,7 @@ public final class PlayClock261xClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         runtimeService = createRuntimeService();
+        registerShutdownHook(runtimeService);
         sessionBridge = new PlayClock261xSessionBridge(runtimeService);
         sessionBridge.register();
         hudOverlay = new PlayClock261xHudOverlay(runtimeService);
@@ -44,5 +45,15 @@ public final class PlayClock261xClient implements ClientModInitializer {
         } catch (IOException exception) {
             throw new UncheckedIOException("Failed to initialize PlayClock runtime for 26.1.x", exception);
         }
+    }
+
+    private static void registerShutdownHook(PlayClockRuntimeService runtimeService) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                runtimeService.shutdown();
+            } catch (RuntimeException exception) {
+                LOGGER.error("Failed to durably persist PlayClock state during shutdown", exception);
+            }
+        }, "PlayClock-261x-Shutdown"));
     }
 }

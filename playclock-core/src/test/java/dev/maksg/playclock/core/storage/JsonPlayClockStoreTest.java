@@ -59,6 +59,31 @@ class JsonPlayClockStoreTest {
     }
 
     @Test
+    void durableSaveWritesReadableStateSnapshot() throws Exception {
+        Path file = tempDir.resolve("playclock-durable.json");
+        JsonPlayClockStore store = new JsonPlayClockStore(file);
+
+        TrackedTarget server = new TrackedTarget(
+                "multiplayer:mc.example.com",
+                "mc.example.com",
+                "mc.example.com",
+                SourceType.SAVED,
+                true,
+                false);
+
+        PlayClockState state = new PlayClockState(
+                JsonPlayClockStore.CURRENT_SCHEMA_VERSION,
+                PlayClockConfig.defaults(),
+                Map.of(server.key(), server),
+                Map.of(server.key(), PlaytimeStats.empty(LocalDate.of(2026, 5, 19))));
+
+        store.saveDurably(state);
+
+        assertTrue(Files.exists(file));
+        assertEquals(state, store.load());
+    }
+
+    @Test
     void returnsDefaultStateWhenFileDoesNotExist() throws Exception {
         JsonPlayClockStore store = new JsonPlayClockStore(tempDir.resolve("missing.json"));
 

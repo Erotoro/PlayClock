@@ -8,9 +8,11 @@ import dev.maksg.playclock.core.stats.PlaytimeStats;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
@@ -56,6 +58,15 @@ public final class JsonPlayClockStore implements PlayClockStore {
 
     @Override
     public void save(PlayClockState state) throws IOException {
+        persist(state, false);
+    }
+
+    @Override
+    public void saveDurably(PlayClockState state) throws IOException {
+        persist(state, true);
+    }
+
+    private void persist(PlayClockState state, boolean durable) throws IOException {
         Files.createDirectories(file.getParent());
         Path tempFile = file.resolveSibling(file.getFileName() + ".tmp");
 
@@ -69,7 +80,21 @@ public final class JsonPlayClockStore implements PlayClockStore {
             gson.toJson(serialized, writer);
         }
 
+        if (durable) {
+            forceFile(tempFile);
+        }
+
         Files.move(tempFile, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+
+        if (durable) {
+            forceFile(file);
+        }
+    }
+
+    private static void forceFile(Path path) throws IOException {
+        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.WRITE)) {
+            channel.force(true);
+        }
     }
 
     private static PlayClockState emptyState() {
